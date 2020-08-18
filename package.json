@@ -1,0 +1,117 @@
+{
+  "name": "lucifer-server",
+  "version": "1.0.0",
+  "description": "",
+  "egg": {
+    "typescript": true,
+    "declarations": true
+  },
+  "scripts": {
+    "start": "egg-scripts start --title=egg-server-lucifer",
+    "start:daemon": "egg-scripts start --daemon --title=egg-server-lucifer",
+    "stop": "egg-scripts stop --title=egg-server-lucifer",
+    "dev": "egg-bin dev",
+    "debug": "egg-bin debug",
+    "test-local": "egg-bin test",
+    "test": "npm run lint -- --fix && npm run test-local",
+    "cov": "egg-bin cov",
+    "tsc": "ets && tsc -p tsconfig.json",
+    "ci": "npm run lint && ets && tsc -p tsconfig.json --noEmit",
+    "autod": "autod",
+    "lint": "eslint . --ext .js,.ts",
+    "lint:fix": "yarn lint --fix",
+    "clean": "ets clean",
+    "uglify": "sh ./scripts/uglify.sh",
+    "migrations": "migrate-mongo -f config/migrate-mongo-config.js",
+    "release": "standard-version",
+    "build": "bash ./scripts/build.sh",
+    "start:pro": "yarn stop && yarn build && cd build && egg-scripts start --title=egg-server-lucifer --ignore-stderr --port=7001",
+    "init-flow": "bash ./scripts/git-flow.sh",
+    "prettier": "prettier --write ."
+  },
+  "dependencies": {
+    "@mete-work/egg-koa-session-auth": "^1.0.0",
+    "@mete-work/egg-minio": "^1.0.1",
+    "@mete-work/egg-nodemailer": "^1.0.5",
+    "@mete-work/egg-swagger": "^1.0.1",
+    "@mete-work/joi": "^1.0.0",
+    "axios": "^0.19.2",
+    "dingtalk-robot-sdk": "^1.1.0",
+    "egg": "^2.6.1",
+    "egg-mongoose": "^3.2.0",
+    "egg-multipart": "^2.10.3",
+    "egg-opentracing": "^1.1.1",
+    "egg-passport": "^2.0.1",
+    "egg-redis": "^2.4.0",
+    "egg-scripts": "^2.6.0",
+    "egg-session-redis": "^2.1.0",
+    "gt3-sdk": "^2.0.0",
+    "lodash": "^4.17.11",
+    "migrate-mongo": "^6.0.0",
+    "mongoose-paginate": "^5.0.3",
+    "otplib": "^11.0.1",
+    "semver": "^7.3.2",
+    "tsconfig-paths": "^3.8.0"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^8.0.0",
+    "@commitlint/config-conventional": "^8.0.0",
+    "@types/hapi__joi": "^15.0.3",
+    "@types/lodash": "^4.14.149",
+    "@types/minio": "^7.0.5",
+    "@types/mocha": "^2.2.40",
+    "@types/mongoose-paginate": "^5.0.8",
+    "@types/node": "^12.7.2",
+    "@types/semver": "^7.3.1",
+    "@types/supertest": "^2.0.0",
+    "@typescript-eslint/eslint-plugin": "^2.12.0",
+    "@typescript-eslint/eslint-plugin-tslint": "^2.12.0",
+    "@typescript-eslint/parser": "^2.12.0",
+    "autod": "^3.0.1",
+    "autod-egg": "^1.1.0",
+    "commitlint-config-cz": "^0.11.1",
+    "cz-conventional-changelog": "^3.0.2",
+    "egg-bin": "^4.13.1",
+    "egg-mock": "^3.16.0",
+    "eslint": "^6.7.2",
+    "eslint-plugin-prettier": "^3.1.2",
+    "husky": "^2.3.0",
+    "lint-staged": "^8.2.0",
+    "mongodb-uri": "^0.9.7",
+    "prettier": "^1.18.2",
+    "standard-version": "^6.0.1",
+    "tslib": "^1.9.0",
+    "typescript": "^3.0.0",
+    "uglifyjs-folder": "^1.5.4"
+  },
+  "lint-staged": {
+    "**/*.{js,ts,tsx,md,json,jsx,less}": [
+      "prettier --write",
+      "git add"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged && npm run ci",
+      "commit-msg": "commitlint -E HUSKY_GIT_PARAMS"
+    }
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  },
+  "engines": {
+    "node": ">=10.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "eslintIgnore": [
+    "coverage"
+  ],
+  "author": "",
+  "license": "MIT",
+  "private": true
+}

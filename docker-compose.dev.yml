@@ -1,0 +1,28 @@
+version: '2'
+services:
+  redis:
+    container_name: lucifer-api-redis
+    image: redis:5-alpine
+    ports:
+      - '6379:6379'
+
+  mongo:
+    container_name: lucifer-api-mongo
+    image: mongo:4.2
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - '27017:27017'
+
+  minio:
+    container_name: lucifer-oss
+    image: minio/minio
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: miniopassword
+    entrypoint:
+      - server
+      - /data
+    ports:
+      - '9000:9000'

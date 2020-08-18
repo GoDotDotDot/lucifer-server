@@ -1,0 +1,58 @@
+version: '3.3'
+
+services:
+  redis:
+    container_name: lucifer-api-redis
+    image: redis:5-alpine
+    environment:
+      REDIS_PASSWORD: redispassword
+    networks:
+      - custom_net
+
+  mongo:
+    container_name: lucifer-api-mongo
+    image: mongo:4.2
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - custom_net
+
+  minio:
+    container_name: lucifer-oss
+    image: minio/minio
+    environment:
+      MINIO_ACCESS_KEY: minio
+      MINIO_SECRET_KEY: miniopassword
+    entrypoint:
+      - server
+      - /data
+    networks:
+      - custom_net
+
+  lucifer-server:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    environment:
+      MONGODB_HOST: lucifer-api-mongo
+      MONGODB_PORT: 27017
+      MONGODB_DB: lucifer
+      MONGODB_USERNAME: root
+      MONGODB_PASSWORD: password
+      REDIS_HOST: lucifer-api-redis
+      REDIS_PASSWORD: redispassword
+      MINIO_ENDPOINT: lucifer-oss
+      MINIO_USERNAME: minio
+      MINIO_PASSWORD: miniopassword
+    networks:
+      - custom_net
+    expose:
+      - '7001'
+    ports:
+      - '7001:7001'
+
+networks:
+  custom_net:
+    external:
+      name: lucifer

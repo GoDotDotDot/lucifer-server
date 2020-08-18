@@ -1,0 +1,206 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: lucifer
+type: Opaque
+data:
+  mongo_password: bHVjaWZlci1tYXRlcmlhbC1tb25nby1wYXNzd29yZA==
+  redis_password: bHVjaWZlci1tYXRlcmlhbC1yZWRpcy1wYXNzd29yZA==
+  minio_access_key: bWluaW8=
+  minio_secret_key: bWluaW8xMjM=
+
+# service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lucifer-redis
+spec:
+  ports:
+    - name: lucifer-redis-port
+      protocol: TCP
+      port: 6379
+      targetPort: 6379
+  selector:
+    app: lucifer-redis
+# service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lucifer-mongo
+spec:
+  ports:
+    - name: lucifer-mongo-port
+      protocol: TCP
+      port: 27017
+      targetPort: 27017
+  selector:
+    app: lucifer-mongo
+# mongodb
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: lucifer-mongo
+  labels:
+    app: lucifer-mongo
+spec:
+  template:
+    metadata:
+      labels:
+        app: lucifer-mongo
+    spec:
+      containers:
+        - name: mongo
+          image: mongo:4.0.0
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: MONGO_INITDB_ROOT_USERNAME
+              value: root
+            - name: MONGO_INITDB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongo_password
+                  name: lucifer
+          volumeMounts:
+            - name: db
+              mountPath: /data/db
+      volumes:
+        - name: db
+          hostPath:
+            path: /mnt/docker_entry/data/xn-dev/lucifer/material/mongo
+
+# redis
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: lucifer-redis
+  labels:
+    app: lucifer-redis
+spec:
+  template:
+    metadata:
+      labels:
+        app: lucifer-redis
+    spec:
+      containers:
+        - name: redis
+          image: redis:5-alpine
+          imagePullPolicy: IfNotPresent
+          args:
+            - redis-server
+            - --requirepass
+            - $(REDIS_PASSWORD)
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redis_password
+                  name: lucifer
+          volumeMounts:
+            - name: db
+              mountPath: /data
+      volumes:
+        - name: db
+          hostPath:
+            path: /mnt/docker_entry/data/xn-dev/lucifer/material/redis
+
+# material api
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: lucifer-api
+  name: lucifer-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lucifer-api
+  template:
+    metadata:
+      labels:
+        app: lucifer-api
+    spec:
+      containers:
+        - image: godotdotdot/lucifer-api:1.0.0
+          imagePullPolicy: Always
+          name: lucifer-api
+          ports:
+            - containerPort: 7001
+          env:
+            - name: MONGODB_HOST
+              value: lucifer-mongo
+            - name: MONGODB_USERNAME
+              value: root
+            - name: MONGODB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: mongo_password
+                  name: lucifer
+            - name: MONGODB_PORT
+              value: '27017'
+            - name: REDIS_HOST
+              value: lucifer-redis
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: redis_password
+                  name: lucifer
+            - name: MINIO_ENDPOINT
+              value: oss.mete.work
+            - name: MINIO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  key: minio_access_key
+                  name: lucifer
+            - name: MINIO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  key: minio_secret_key
+                  name: lucifer
+          livenessProbe:
+            httpGet:
+              path: /api/sys/healthcheck
+              port: 7001
+            initialDelaySeconds: 30
+            periodSeconds: 5
+      imagePullSecrets:
+        - name: regsecret
+      restartPolicy: Always
+
+# service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: lucifer-api
+spec:
+  ports:
+    - name: lucifer-api
+      protocol: TCP
+      port: 7001
+      targetPort: 7001
+  selector:
+    app: lucifer-api
+
+# ingress
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  generation: 1
+  name: lucifer
+  namespace: xn-dev
+spec:
+  rules:
+    - host: lucifer.mete.work
+      http:
+        paths:
+          - backend:
+              serviceName: lucifer-api
+              servicePort: 7001

@@ -1,0 +1,92 @@
+import { EggAppConfig, PowerPartial } from 'egg';
+
+const mongoDB = {
+  url: 'mongodb://root:rootpassword@localhost/lucifer?authSource=admin',
+  options: {
+    autoReconnect: true,
+  },
+};
+
+export default () => {
+  const config: PowerPartial<EggAppConfig> = {};
+
+  config.auditLog = {
+    mongoose: mongoDB,
+  };
+
+  config.redis = {
+    clients: {
+      session: {
+        host: 'localhost',
+        port: 6379,
+        password: 'rootpassword',
+        db: 0,
+      },
+      schedule: {
+        host: 'localhost',
+        port: 6379,
+        password: 'rootpassword',
+        db: 0,
+      },
+      config: {
+        host: 'localhost',
+        port: 6379,
+        password: 'rootpassword',
+        db: 0,
+      },
+      securityPlatform: {
+        host: 'localhost',
+        port: 6379,
+        password: 'rootpassword',
+        db: 1,
+      },
+    },
+  };
+
+  config.mongoose = mongoDB;
+
+  config.accountLock = {
+    count: 5,
+    lockTime: 24 * 3600 * 1000,
+  };
+
+  config.logger = {
+    consoleLevel: 'DEBUG',
+  };
+
+  config.nodemailer = {
+    client: {
+      host: 'smtp.mete.work',
+      port: 465,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        user: 'noreply@mete.work', // generated ethereal user
+        pass: 'passport', // generated ethereal password
+      },
+      tls: {
+        // do not fail on invalid certs
+        rejectUnauthorized: false,
+      },
+    },
+  };
+
+  config.mapping = {
+    '.ejs': 'ejs',
+  };
+
+  config.securityPlatform = {
+    // 过期时间，单位：秒
+    verifyCodeExpire: 5 * 60,
+  };
+
+  config.minio = {
+    client: {
+      endPoint: 'localhost',
+      accessKey: 'minio',
+      secretKey: 'miniopassword',
+      useSSL: false,
+      port: 9000,
+    },
+  };
+  return config;
+};
